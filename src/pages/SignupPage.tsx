@@ -46,7 +46,7 @@ export function SignupPage() {
     });
     if (result.success) {
       toast.success('Account created! Welcome to TableSpot.');
-      navigate('/home', { replace: true });
+      navigate('/', { replace: true });
       return;
     }
     const err = result.error;

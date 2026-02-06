@@ -38,6 +38,7 @@ export function Navbar() {
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 16);
+    handleScroll();
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -45,8 +46,15 @@ export function Navbar() {
   const isActive = (path: string) =>
     path === '/' ? location.pathname === '/' : location.pathname.startsWith(path);
 
+  const overHero = !scrolled;
   const navLinkSx = (path: string) => ({
-    color: isActive(path) ? 'primary.main' : 'text.primary',
+    color: overHero
+      ? isActive(path)
+        ? 'primary.main'
+        : 'rgba(255, 255, 255, 0.9)'
+      : isActive(path)
+        ? 'primary.main'
+        : 'text.primary',
     fontWeight: 500,
     opacity: isActive(path) ? 1 : 0.85,
     '&:hover': { color: 'primary.main', opacity: 1 },
@@ -128,7 +136,7 @@ export function Navbar() {
                   fontFamily: theme.typography.h1.fontFamily,
                   fontSize: '1.25rem',
                   lineHeight: 1.2,
-                  color: 'text.primary',
+                  color: overHero ? 'rgba(255, 255, 255, 0.95)' : 'text.primary',
                 }}
               >
                 TableSpot
@@ -139,7 +147,7 @@ export function Navbar() {
                   fontSize: '0.65rem',
                   letterSpacing: '0.12em',
                   textTransform: 'uppercase',
-                  color: 'text.secondary',
+                  color: overHero ? 'rgba(255, 255, 255, 0.7)' : 'text.secondary',
                 }}
               >
                 Restaurant Finder
@@ -195,14 +203,21 @@ export function Navbar() {
                       <UserIcon sx={{ fontSize: 18, color: 'primary.main' }} />
                     </Box>
                   }
-                  sx={{ color: 'text.secondary', fontWeight: 500, '&:hover': { color: 'text.primary' } }}
+                  sx={{
+                    color: overHero ? 'rgba(255, 255, 255, 0.9)' : 'text.secondary',
+                    fontWeight: 500,
+                    '&:hover': { color: overHero ? 'white' : 'text.primary' },
+                  }}
                 >
                   {user?.name}
                 </Button>
                 <IconButton
                   onClick={() => logout()}
                   size="small"
-                  sx={{ color: 'text.secondary', '&:hover': { color: 'error.main' } }}
+                  sx={{
+                    color: overHero ? 'rgba(255, 255, 255, 0.9)' : 'text.secondary',
+                    '&:hover': { color: 'error.main' },
+                  }}
                   aria-label="Sign out"
                 >
                   <LogOutIcon fontSize="small" />
@@ -210,7 +225,15 @@ export function Navbar() {
               </>
             ) : (
               <>
-                <Button component={Link} to="/login" sx={{ color: 'text.secondary', fontWeight: 500 }}>
+                <Button
+                  component={Link}
+                  to="/login"
+                  sx={{
+                    color: overHero ? 'rgba(255, 255, 255, 0.9)' : 'text.secondary',
+                    fontWeight: 500,
+                    '&:hover': { color: overHero ? 'white' : 'text.primary' },
+                  }}
+                >
                   Sign In
                 </Button>
                 <Button
@@ -229,7 +252,11 @@ export function Navbar() {
         {/* Mobile menu button */}
         <IconButton
           onClick={() => setMobileMenuOpen((o) => !o)}
-          sx={{ display: { lg: 'none' }, color: 'text.primary', marginLeft: 'auto' }}
+          sx={{
+            display: { lg: 'none' },
+            color: overHero ? 'rgba(255, 255, 255, 0.95)' : 'text.primary',
+            marginLeft: 'auto',
+          }}
           aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
         >
           {mobileMenuOpen ? <CloseIcon /> : <MenuIcon />}

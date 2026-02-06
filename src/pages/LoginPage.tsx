@@ -46,7 +46,7 @@ export function LoginPage() {
     const result = await login(email, password);
     if (result.success) {
       toast.success('Welcome back!');
-      navigate('/home', { replace: true });
+      navigate('/', { replace: true });
       return;
     }
     const err = result.error;

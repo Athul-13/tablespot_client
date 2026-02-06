@@ -4,7 +4,6 @@ import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { AddRestaurantPage } from '@/pages/AddRestaurantPage';
 import { ExplorePage } from '@/pages/ExplorePage';
 import { ForgotPasswordPage } from '@/pages/ForgotPasswordPage';
-import { HomePage } from '@/pages/HomePage';
 import { LandingPage } from '@/pages/LandingPage';
 import { LoginPage } from '@/pages/LoginPage';
 import { ProfilePage } from '@/pages/ProfilePage';
@@ -47,14 +46,6 @@ function App() {
             <GuestOnlyRoute>
               <ResetPasswordPage />
             </GuestOnlyRoute>
-          }
-        />
-        <Route
-          path="/home"
-          element={
-            <ProtectedRoute>
-              <HomePage />
-            </ProtectedRoute>
           }
         />
         <Route

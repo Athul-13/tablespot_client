@@ -4,11 +4,11 @@ import { Box, CircularProgress } from '@mui/material';
 
 interface GuestOnlyRouteProps {
   children: React.ReactNode;
-  /** Where to send logged-in users. Defaults to /home. */
+  /** Where to send logged-in users. Defaults to landing page. */
   redirectTo?: string;
 }
 
-export function GuestOnlyRoute({ children, redirectTo = '/home' }: GuestOnlyRouteProps) {
+export function GuestOnlyRoute({ children, redirectTo = '/' }: GuestOnlyRouteProps) {
   const { user, isLoading } = useAuth();
 
   if (isLoading) {
