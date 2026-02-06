@@ -72,10 +72,11 @@ export function Navbar() {
         transition: 'background-color 0.3s, box-shadow 0.3s, border-color 0.3s',
         ...(scrolled
           ? {
-              bgcolor: alpha(theme.palette.background.paper, 0.95),
-              backdropFilter: 'blur(12px)',
-              boxShadow: theme.shadows[1],
-              borderBottom: `1px solid ${alpha(theme.palette.divider, 0.5)}`,
+              bgcolor: alpha(theme.palette.background.paper, 0.0),
+              backdropFilter: 'saturate(180%) blur(20px)',
+              WebkitBackdropFilter: 'saturate(180%) blur(20px)',
+              boxShadow: `0 1px 0 ${alpha(theme.palette.common.white, 0.1)}`,
+              borderBottom: `1px solid ${alpha(theme.palette.divider, 0.2)}`,
             }
           : { bgcolor: 'transparent' }),
       }}

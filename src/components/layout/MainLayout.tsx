@@ -5,9 +5,11 @@ import { Footer } from './Footer';
 
 const NAVBAR_HEIGHT = { xs: 64, lg: 80 };
 
+const HERO_PATHS = ['/', '/restaurants'];
+
 export function MainLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
-  const isLanding = location.pathname === '/';
+  const isHeroPage = HERO_PATHS.includes(location.pathname);
 
   return (
     <Box
@@ -23,7 +25,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
         component="main"
         sx={{
           flex: 1,
-          pt: isLanding ? 0 : { xs: `${NAVBAR_HEIGHT.xs}px`, lg: `${NAVBAR_HEIGHT.lg}px` },
+          pt: isHeroPage ? 0 : { xs: `${NAVBAR_HEIGHT.xs}px`, lg: `${NAVBAR_HEIGHT.lg}px` },
         }}
       >
         {children}
