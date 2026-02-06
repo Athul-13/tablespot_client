@@ -1,4 +1,5 @@
 import { apiClient } from '@/lib/axios';
+import { ENDPOINTS } from '@/api/endpoints';
 import type {
   AuthUser,
   LoginInput,
@@ -7,8 +8,6 @@ import type {
   ResetPasswordInput,
 } from '@/types/auth';
 import type { AxiosError } from 'axios';
-
-const AUTH_BASE = '/auth';
 
 export interface AuthApiError {
   message: string;
@@ -29,22 +28,22 @@ function toAuthError(err: unknown): AuthApiError {
 }
 
 export async function signup(data: SignupInput): Promise<{ user: AuthUser }> {
-  const res = await apiClient.post<{ user: AuthUser }>(`${AUTH_BASE}/signup`, data);
+  const res = await apiClient.post<{ user: AuthUser }>(ENDPOINTS.AUTH.SIGNUP, data);
   return res.data;
 }
 
 export async function login(data: LoginInput): Promise<{ user: AuthUser }> {
-  const res = await apiClient.post<{ user: AuthUser }>(`${AUTH_BASE}/login`, data);
+  const res = await apiClient.post<{ user: AuthUser }>(ENDPOINTS.AUTH.LOGIN, data);
   return res.data;
 }
 
 export async function logout(): Promise<void> {
-  await apiClient.post(`${AUTH_BASE}/logout`);
+  await apiClient.post(ENDPOINTS.AUTH.LOGOUT);
 }
 
 export async function refresh(): Promise<{ user: AuthUser; accessToken: string; refreshToken: string } | null> {
   try {
-    const res = await apiClient.post<{ user: AuthUser }>(`${AUTH_BASE}/refresh`);
+    const res = await apiClient.post<{ user: AuthUser }>(ENDPOINTS.AUTH.REFRESH);
     return { user: res.data.user, accessToken: '', refreshToken: '' };
   } catch {
     return null;
@@ -52,16 +51,26 @@ export async function refresh(): Promise<{ user: AuthUser; accessToken: string; 
 }
 
 export async function getMe(): Promise<AuthUser> {
-  const res = await apiClient.get<AuthUser>(`${AUTH_BASE}/me`);
+  const res = await apiClient.get<AuthUser>(ENDPOINTS.AUTH.ME);
   return res.data;
 }
 
 export async function forgotPassword(data: ForgotPasswordInput): Promise<void> {
-  await apiClient.post(`${AUTH_BASE}/forgot-password`, data);
+  await apiClient.post(ENDPOINTS.AUTH.FORGOT_PASSWORD, data);
 }
 
 export async function resetPassword(data: ResetPasswordInput): Promise<void> {
-  await apiClient.post(`${AUTH_BASE}/reset-password`, data);
+  await apiClient.post(ENDPOINTS.AUTH.RESET_PASSWORD, data);
+}
+
+export async function changePassword(
+  currentPassword: string,
+  newPassword: string
+): Promise<void> {
+  await apiClient.post(ENDPOINTS.AUTH.CHANGE_PASSWORD, {
+    currentPassword,
+    newPassword,
+  });
 }
 
 export { toAuthError };
