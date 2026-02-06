@@ -11,7 +11,6 @@ import {
 } from '@mui/material';
 import {
   Email as EmailIcon,
-  Lock as LockIcon,
   Visibility,
   VisibilityOff,
   Restaurant as RestaurantIcon,
@@ -208,30 +207,27 @@ export function LoginPage() {
               helperText={fieldErrors.password}
               slotProps={{
                 input: {
-                  sx: { fontSize: 'clamp(14px, 2.5dvh, 16px)' },
+                  sx: {
+                    fontSize: 'clamp(14px, 2.5dvh, 16px)',
+                    minHeight: 'clamp(40px, 10dvh, 56px)',
+                  },
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        onClick={() => setShowPassword(!showPassword)}
+                        onMouseDown={(e) => e.preventDefault()}
+                        edge="end"
+                        aria-label={showPassword ? 'Hide password' : 'Show password'}
+                        sx={{ minWidth: 40, minHeight: 40, p: 0.5 }}
+                      >
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
                 },
               }}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <LockIcon sx={{ color: 'text.secondary', fontSize: 'clamp(18px, 3dvh, 24px)' }} />
-                  </InputAdornment>
-                ),
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton
-                      onClick={() => setShowPassword(!showPassword)}
-                      edge="end"
-                      aria-label={showPassword ? 'Hide password' : 'Show password'}
-                      sx={{ minWidth: 40, minHeight: 40, p: 0.5 }}
-                    >
-                      {showPassword ? <VisibilityOff /> : <Visibility />}
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }}
-              sx={{ '& .MuiInputBase-root': { minHeight: 'clamp(40px, 10dvh, 56px)' } }}
             />
+
 
             <Button
               type="submit"
