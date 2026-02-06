@@ -62,7 +62,7 @@ export function LandingPage() {
         <Box
           sx={{
             position: 'relative',
-            minHeight: '90vh',
+            minHeight: { xs: '70vh', sm: '80vh', md: '90vh' },
             display: 'flex',
             alignItems: 'center',
             overflow: 'hidden',
@@ -91,7 +91,7 @@ export function LandingPage() {
           </Box>
 
           {/* Content - padded below navbar so text is not hidden */}
-          <Container sx={{ position: 'relative', zIndex: 10, pt: { xs: 9, lg: 11 } }}>
+          <Container sx={{ position: 'relative', zIndex: 10, pt: { xs: 9, lg: 11 }, px: { xs: 2, sm: 3 } }}>
             <Box sx={{ maxWidth: '650px' }}>
               <Chip
                 icon={<TrendingUpIcon sx={{ color: 'primary.main', fontSize: 16 }} />}
@@ -175,7 +175,7 @@ export function LandingPage() {
               </Box>
 
               {/* Stats */}
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: { xs: 2, sm: 3, md: 4 } }}>
                 {stats.map((stat, index) => (
                   <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                     <Box
@@ -265,15 +265,15 @@ export function LandingPage() {
         {/* Features Section */}
         <Box
           sx={{
-            py: 12,
+            py: { xs: 6, sm: 8, md: 12 },
             bgcolor: 'background.default',
           }}
         >
-          <Container>
-            <Box sx={{ textAlign: 'center', maxWidth: '650px', mx: 'auto', mb: 8 }}>
+          <Container sx={{ px: { xs: 2, sm: 3 } }}>
+            <Box sx={{ textAlign: 'center', maxWidth: '650px', mx: 'auto', mb: { xs: 4, md: 8 } }}>
               <Typography
                 variant="h2"
-                sx={{ fontSize: { xs: '1.75rem', md: '2.25rem' }, mb: 2 }}
+                sx={{ fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2.25rem' }, mb: 2 }}
               >
                 Why Choose TableSpot?
               </Typography>
@@ -282,13 +282,13 @@ export function LandingPage() {
               </Typography>
             </Box>
 
-            <Grid container spacing={4}>
+            <Grid container spacing={{ xs: 2, sm: 3, md: 4 }}>
               {features.map((feature, index) => (
                 <Grid size={{ xs: 12, md: 4 }} key={index}>
                   <Paper
                     elevation={0}
                     sx={{
-                      p: 4,
+                      p: { xs: 2.5, sm: 3, md: 4 },
                       height: '100%',
                       transition: 'all 0.3s ease',
                       '&:hover': {
@@ -331,8 +331,8 @@ export function LandingPage() {
         </Box>
 
         {/* Featured Restaurants */}
-        <Box sx={{ py: 12 }}>
-          <Container>
+        <Box sx={{ py: { xs: 6, sm: 8, md: 12 } }}>
+          <Container sx={{ px: { xs: 2, sm: 3 } }}>
             <Box
               sx={{
                 display: 'flex',
@@ -340,7 +340,7 @@ export function LandingPage() {
                 alignItems: { md: 'flex-end' },
                 justifyContent: 'space-between',
                 gap: 2,
-                mb: 6,
+                mb: { xs: 4, md: 6 },
               }}
             >
               <Box>
@@ -378,7 +378,7 @@ export function LandingPage() {
               </Button>
             </Box>
 
-            <Grid container spacing={4}>
+            <Grid container spacing={{ xs: 2, sm: 3, md: 4 }}>
               {featuredRestaurants.map((restaurant, index) => (
                 <Grid size={{ xs: 12, md: 6, lg: 4 }} key={restaurant.id}>
                   <Box sx={{ animationDelay: `${index * 0.1}s` }}>
@@ -391,7 +391,7 @@ export function LandingPage() {
         </Box>
 
         {/* CTA Section */}
-        <Box sx={{ py: 12, position: 'relative', overflow: 'hidden' }}>
+        <Box sx={{ py: { xs: 6, sm: 8, md: 12 }, position: 'relative', overflow: 'hidden' }}>
           <Box
             sx={{
               position: 'absolute',
@@ -401,14 +401,14 @@ export function LandingPage() {
               opacity: 0.95,
             }}
           />
-          <Container sx={{ position: 'relative', zIndex: 10 }}>
+          <Container sx={{ position: 'relative', zIndex: 10, px: { xs: 2, sm: 3 } }}>
             <Box sx={{ maxWidth: '750px', mx: 'auto', textAlign: 'center' }}>
               <Typography
                 variant="h2"
                 sx={{
-                  fontSize: { xs: '1.75rem', md: '2.75rem' },
+                  fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2.75rem' },
                   color: 'white',
-                  mb: 3,
+                  mb: { xs: 2, md: 3 },
                 }}
               >
                 Own a Restaurant?

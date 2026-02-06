@@ -20,6 +20,7 @@ interface AuthContextValue {
   logout: () => Promise<void>;
   forgotPassword: (email: string) => Promise<{ success: boolean; error?: AuthApiError }>;
   resetPassword: (token: string, newPassword: string) => Promise<{ success: boolean; error?: AuthApiError }>;
+  changePassword: (currentPassword: string, newPassword: string) => Promise<{ success: boolean; error?: AuthApiError }>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -122,6 +123,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const changePassword = useCallback(
+    async (currentPassword: string, newPassword: string) => {
+      setError(null);
+      try {
+        await authApi.changePassword(currentPassword, newPassword);
+        return { success: true };
+      } catch (err) {
+        const e = authApi.toAuthError(err);
+        setError(e.message);
+        return { success: false, error: e };
+      }
+    },
+    []
+  );
+
   const value: AuthContextValue = {
     user,
     isLoading,
@@ -132,6 +148,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     logout,
     forgotPassword,
     resetPassword,
+    changePassword,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

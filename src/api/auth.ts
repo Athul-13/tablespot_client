@@ -63,4 +63,14 @@ export async function resetPassword(data: ResetPasswordInput): Promise<void> {
   await apiClient.post(ENDPOINTS.AUTH.RESET_PASSWORD, data);
 }
 
+export async function changePassword(
+  currentPassword: string,
+  newPassword: string
+): Promise<void> {
+  await apiClient.post(ENDPOINTS.AUTH.CHANGE_PASSWORD, {
+    currentPassword,
+    newPassword,
+  });
+}
+
 export { toAuthError };

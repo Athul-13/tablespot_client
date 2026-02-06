@@ -15,6 +15,7 @@ export const ENDPOINTS = {
     ME: `${AUTH}/me`,
     FORGOT_PASSWORD: `${AUTH}/forgot-password`,
     RESET_PASSWORD: `${AUTH}/reset-password`,
+    CHANGE_PASSWORD: `${AUTH}/change-password`,
   },
 } as const;
 

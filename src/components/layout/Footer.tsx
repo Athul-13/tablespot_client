@@ -9,14 +9,14 @@ export function Footer() {
     <Box
       component="footer"
       sx={{
-        py: 4,
+        py: { xs: 3, sm: 4 },
         mt: 'auto',
         borderTop: 1,
         borderColor: 'divider',
         bgcolor: 'background.paper',
       }}
     >
-      <Container maxWidth="lg">
+      <Container maxWidth="lg" sx={{ px: { xs: 2, sm: 3 } }}>
         <Box
           sx={{
             display: 'flex',
@@ -28,11 +28,11 @@ export function Footer() {
         >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <LogoIcon sx={{ fontSize: 20, color: 'primary.main' }} />
-            <Typography variant="body2" color="text.secondary" fontWeight={500}>
+            <Typography variant="body2" color="text.secondary" fontWeight={500} sx={{ fontSize: { xs: '0.8125rem', sm: '0.875rem' } }}>
               TableSpot
             </Typography>
           </Box>
-          <Box sx={{ display: 'flex', gap: 3 }}>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: { xs: 2, sm: 3 } }}>
             <MuiLink
               component={Link}
               to="/"
@@ -56,7 +56,7 @@ export function Footer() {
         <Typography
           variant="caption"
           color="text.secondary"
-          sx={{ display: 'block', textAlign: 'center', mt: 2 }}
+          sx={{ display: 'block', textAlign: 'center', mt: 2, fontSize: { xs: '0.75rem', sm: '0.8125rem' } }}
         >
           © {currentYear} TableSpot. All rights reserved.
         </Typography>

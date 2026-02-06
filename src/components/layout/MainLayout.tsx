@@ -5,7 +5,7 @@ import { Footer } from './Footer';
 
 const NAVBAR_HEIGHT = { xs: 64, lg: 80 };
 
-const HERO_PATHS = ['/', '/restaurants'];
+const HERO_PATHS = ['/', '/restaurants', '/profile'];
 
 export function MainLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
