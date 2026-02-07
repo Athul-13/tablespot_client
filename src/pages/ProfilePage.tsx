@@ -1,5 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Box,
   Container,
@@ -13,6 +15,8 @@ import {
   Chip,
   ToggleButtonGroup,
   ToggleButton,
+  Grid,
+  CircularProgress,
 } from '@mui/material';
 import {
   Person as PersonIcon,
@@ -23,10 +27,14 @@ import {
   VisibilityOff,
   Add as AddIcon,
   ChevronRight as ChevronRightIcon,
+  Edit as EditIcon,
 } from '@mui/icons-material';
 import { MainLayout } from '@/components/layout';
 import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/contexts/ToastContext';
+import { useToast } from '@/contexts/ToastContext.tsx';
+import { useRestaurants } from '@/contexts/RestaurantContext';
+import RestaurantCard from '@/components/restaurants/RestaurantCard';
+import { changePasswordSchema, type ChangePasswordFormValues } from '@/lib/validation';
 import profileHeroImage from '@/assets/profile-hero.jpg';
 
 const CARD_SHADOW = '0 8px 24px -8px hsla(30, 10%, 12%, 0.12)';
@@ -41,32 +49,39 @@ type TabValue = 'account' | 'restaurants';
 export function ProfilePage() {
   const { user, changePassword } = useAuth();
   const { toast } = useToast();
+  const { restaurants, isLoading, fetchRestaurants } = useRestaurants();
   const [tab, setTab] = useState<TabValue>('account');
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+
+  const myRestaurants = user
+    ? restaurants.filter((r) => r.createdByUserId === user.id)
+    : [];
+
+  useEffect(() => {
+    if (tab === 'restaurants') fetchRestaurants();
+  }, [tab, fetchRestaurants]);
+
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [passwordError, setPasswordError] = useState<string | null>(null);
 
-  const handleChangePassword = async () => {
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors: passwordErrors },
+  } = useForm<ChangePasswordFormValues>({
+    resolver: zodResolver(changePasswordSchema),
+    defaultValues: { currentPassword: '', newPassword: '', confirmPassword: '' },
+  });
+
+  const onChangePassword = async (data: ChangePasswordFormValues) => {
     setPasswordError(null);
-    if (newPassword !== confirmPassword) {
-      setPasswordError('New passwords do not match');
-      return;
-    }
-    if (newPassword.length < 6) {
-      setPasswordError('Password must be at least 6 characters');
-      return;
-    }
     setIsChangingPassword(true);
-    const result = await changePassword(currentPassword, newPassword);
+    const result = await changePassword(data.currentPassword, data.newPassword);
     setIsChangingPassword(false);
     if (result.success) {
-      setCurrentPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
+      reset({ currentPassword: '', newPassword: '', confirmPassword: '' });
       toast.success('Password changed successfully');
     } else {
       setPasswordError(result.error?.message ?? 'Failed to change password');
@@ -330,72 +345,91 @@ export function ProfilePage() {
                     <Typography variant="h2" sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' }, mb: 2 }}>
                       Change password
                     </Typography>
-                    <Stack spacing={2} sx={{ maxWidth: 400, width: '100%' }}>
-                      <TextField
-                        label="Current password"
-                        type={showCurrentPassword ? 'text' : 'password'}
-                        value={currentPassword}
-                        onChange={(e) => setCurrentPassword(e.target.value)}
-                        size="small"
-                        fullWidth
-                        autoComplete="current-password"
-                        InputProps={{
-                          endAdornment: (
-                            <InputAdornment position="end">
-                              <IconButton
-                                onClick={() => setShowCurrentPassword((s) => !s)}
-                                edge="end"
-                                aria-label="toggle current password visibility"
-                              >
-                                {showCurrentPassword ? <VisibilityOff /> : <Visibility />}
-                              </IconButton>
-                            </InputAdornment>
-                          ),
-                        }}
+                    <Stack
+                      component="form"
+                      onSubmit={handleSubmit(onChangePassword)}
+                      noValidate
+                      spacing={2}
+                      sx={{ maxWidth: 400, width: '100%' }}
+                    >
+                      <Controller
+                        name="currentPassword"
+                        control={control}
+                        render={({ field }) => (
+                          <TextField
+                            {...field}
+                            label="Current password"
+                            type={showCurrentPassword ? 'text' : 'password'}
+                            size="small"
+                            fullWidth
+                            autoComplete="current-password"
+                            error={!!passwordErrors.currentPassword}
+                            helperText={passwordErrors.currentPassword?.message}
+                            InputProps={{
+                              endAdornment: (
+                                <InputAdornment position="end">
+                                  <IconButton
+                                    onClick={() => setShowCurrentPassword((s) => !s)}
+                                    edge="end"
+                                    aria-label="toggle current password visibility"
+                                  >
+                                    {showCurrentPassword ? <VisibilityOff /> : <Visibility />}
+                                  </IconButton>
+                                </InputAdornment>
+                              ),
+                            }}
+                          />
+                        )}
                       />
-                      <TextField
-                        label="New password"
-                        type={showNewPassword ? 'text' : 'password'}
-                        value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
-                        size="small"
-                        fullWidth
-                        autoComplete="new-password"
-                        helperText="At least 6 characters"
-                        InputProps={{
-                          endAdornment: (
-                            <InputAdornment position="end">
-                              <IconButton
-                                onClick={() => setShowNewPassword((s) => !s)}
-                                edge="end"
-                                aria-label="toggle new password visibility"
-                              >
-                                {showNewPassword ? <VisibilityOff /> : <Visibility />}
-                              </IconButton>
-                            </InputAdornment>
-                          ),
-                        }}
+                      <Controller
+                        name="newPassword"
+                        control={control}
+                        render={({ field }) => (
+                          <TextField
+                            {...field}
+                            label="New password"
+                            type={showNewPassword ? 'text' : 'password'}
+                            size="small"
+                            fullWidth
+                            autoComplete="new-password"
+                            error={!!passwordErrors.newPassword}
+                            helperText={passwordErrors.newPassword?.message ?? 'At least 6 characters'}
+                            InputProps={{
+                              endAdornment: (
+                                <InputAdornment position="end">
+                                  <IconButton
+                                    onClick={() => setShowNewPassword((s) => !s)}
+                                    edge="end"
+                                    aria-label="toggle new password visibility"
+                                  >
+                                    {showNewPassword ? <VisibilityOff /> : <Visibility />}
+                                  </IconButton>
+                                </InputAdornment>
+                              ),
+                            }}
+                          />
+                        )}
                       />
-                      <TextField
-                        label="Confirm new password"
-                        type="password"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        size="small"
-                        fullWidth
-                        autoComplete="new-password"
-                        error={!!passwordError}
-                        helperText={passwordError}
+                      <Controller
+                        name="confirmPassword"
+                        control={control}
+                        render={({ field }) => (
+                          <TextField
+                            {...field}
+                            label="Confirm new password"
+                            type="password"
+                            size="small"
+                            fullWidth
+                            autoComplete="new-password"
+                            error={!!passwordErrors.confirmPassword || !!passwordError}
+                            helperText={passwordErrors.confirmPassword?.message ?? passwordError}
+                          />
+                        )}
                       />
                       <Button
+                        type="submit"
                         variant="contained"
-                        onClick={handleChangePassword}
-                        disabled={
-                          isChangingPassword ||
-                          !currentPassword ||
-                          !newPassword ||
-                          !confirmPassword
-                        }
+                        disabled={isChangingPassword}
                       >
                         {isChangingPassword ? 'Changing…' : 'Change password'}
                       </Button>
@@ -405,66 +439,118 @@ export function ProfilePage() {
               )}
 
               {tab === 'restaurants' && (
-                <Box
-                  sx={{
-                    py: { xs: 4, sm: 6 },
-                    px: { xs: 1, sm: 2 },
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    textAlign: 'center',
-                  }}
-                >
-                  <Box
-                    sx={{
-                      width: { xs: 64, sm: 80 },
-                      height: { xs: 64, sm: 80 },
-                      borderRadius: '20px',
-                      background: GRADIENT_PRIMARY,
-                      boxShadow: ICON_GLOW,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      mb: { xs: 2, sm: 3 },
-                      transition: 'transform 0.3s ease',
-                      '&:hover': { transform: 'scale(1.05)' },
-                    }}
-                  >
-                    <RestaurantIcon sx={{ color: 'white', fontSize: { xs: 32, sm: 40 } }} />
-                  </Box>
-                  <Typography
-                    variant="h2"
-                    sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' }, mb: 1, color: 'text.primary' }}
-                  >
-                    No restaurants yet
-                  </Typography>
-                  <Typography color="text.secondary" sx={{ mb: { xs: 2, sm: 3 }, maxWidth: 320, fontSize: { xs: '0.9375rem', sm: '1rem' } }}>
-                    Your restaurant list will appear here. Add your first spot or explore
-                    what others have shared.
-                  </Typography>
-                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ width: { xs: '100%', sm: 'auto' }, maxWidth: 360 }}>
-                    <Button
-                      component={Link}
-                      to="/add-restaurant"
-                      variant="contained"
-                      startIcon={<AddIcon />}
-                      fullWidth={false}
-                      sx={{ width: { xs: '100%', sm: 'auto' } }}
+                <Box sx={{ py: { xs: 2, sm: 3 }, px: { xs: 1, sm: 2 } }}>
+                  {isLoading ? (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
+                      <CircularProgress />
+                    </Box>
+                  ) : myRestaurants.length === 0 ? (
+                    <Box
+                      sx={{
+                        py: { xs: 4, sm: 6 },
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        textAlign: 'center',
+                      }}
                     >
-                      Add restaurant
-                    </Button>
-                    <Button
-                      component={Link}
-                      to="/restaurants"
-                      variant="outlined"
-                      endIcon={<ChevronRightIcon />}
-                      fullWidth={false}
-                      sx={{ width: { xs: '100%', sm: 'auto' } }}
-                    >
-                      Explore restaurants
-                    </Button>
-                  </Stack>
+                      <Box
+                        sx={{
+                          width: { xs: 64, sm: 80 },
+                          height: { xs: 64, sm: 80 },
+                          borderRadius: '20px',
+                          background: GRADIENT_PRIMARY,
+                          boxShadow: ICON_GLOW,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          mb: { xs: 2, sm: 3 },
+                          transition: 'transform 0.3s ease',
+                          '&:hover': { transform: 'scale(1.05)' },
+                        }}
+                      >
+                        <RestaurantIcon sx={{ color: 'white', fontSize: { xs: 32, sm: 40 } }} />
+                      </Box>
+                      <Typography
+                        variant="h2"
+                        sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' }, mb: 1, color: 'text.primary' }}
+                      >
+                        No restaurants yet
+                      </Typography>
+                      <Typography color="text.secondary" sx={{ mb: { xs: 2, sm: 3 }, maxWidth: 320, fontSize: { xs: '0.9375rem', sm: '1rem' } }}>
+                        Your restaurant list will appear here. Add your first spot or explore
+                        what others have shared.
+                      </Typography>
+                      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ width: { xs: '100%', sm: 'auto' }, maxWidth: 360 }}>
+                        <Button
+                          component={Link}
+                          to="/add-restaurant"
+                          variant="contained"
+                          startIcon={<AddIcon />}
+                          fullWidth={false}
+                          sx={{ width: { xs: '100%', sm: 'auto' } }}
+                        >
+                          Add restaurant
+                        </Button>
+                        <Button
+                          component={Link}
+                          to="/restaurants"
+                          variant="outlined"
+                          endIcon={<ChevronRightIcon />}
+                          fullWidth={false}
+                          sx={{ width: { xs: '100%', sm: 'auto' } }}
+                        >
+                          Explore restaurants
+                        </Button>
+                      </Stack>
+                    </Box>
+                  ) : (
+                    <>
+                      <Stack
+                        direction={{ xs: 'column', sm: 'row' }}
+                        alignItems={{ sm: 'center' }}
+                        justifyContent="space-between"
+                        spacing={2}
+                        sx={{ mb: 3 }}
+                      >
+                        <Typography variant="h2" sx={{ fontSize: '1.25rem' }}>
+                          Your restaurants
+                        </Typography>
+                        <Button
+                          component={Link}
+                          to="/add-restaurant"
+                          variant="contained"
+                          size="small"
+                          startIcon={<AddIcon />}
+                        >
+                          Add restaurant
+                        </Button>
+                      </Stack>
+                      <Grid container spacing={{ xs: 2, sm: 3, md: 4 }}>
+                        {myRestaurants.map((restaurant) => (
+                          <Grid size={{ xs: 12, sm: 6, lg: 4 }} key={restaurant.id}>
+                            <Box sx={{ position: 'relative' }}>
+                              <RestaurantCard restaurant={restaurant} />
+                              <Button
+                                component={Link}
+                                to={`/restaurants/${restaurant.id}/edit`}
+                                variant="outlined"
+                                size="small"
+                                startIcon={<EditIcon />}
+                                sx={{
+                                  mt: 1.5,
+                                  width: '100%',
+                                }}
+                              >
+                                Edit
+                              </Button>
+                            </Box>
+                          </Grid>
+                        ))}
+                      </Grid>
+                    </>
+                  )}
                 </Box>
               )}
             </Box>

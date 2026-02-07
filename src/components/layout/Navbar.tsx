@@ -20,6 +20,7 @@ import {
   Add as PlusIcon,
 } from '@mui/icons-material';
 import { useAuth } from '@/contexts/AuthContext';
+import { isHeroPath } from './heroPaths';
 
 const navLinks = [
   { to: '/', label: 'Home' },
@@ -46,7 +47,8 @@ export function Navbar() {
   const isActive = (path: string) =>
     path === '/' ? location.pathname === '/' : location.pathname.startsWith(path);
 
-  const overHero = !scrolled;
+  const onHeroPath = isHeroPath(location.pathname);
+  const overHero = onHeroPath && !scrolled;
   const navLinkSx = (path: string) => ({
     color: overHero
       ? isActive(path)

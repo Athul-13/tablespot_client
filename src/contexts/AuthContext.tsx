@@ -80,8 +80,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signup = useCallback(async (data: SignupInput) => {
     setError(null);
     try {
-      const { user: u } = await authApi.signup(data);
-      setUser(u);
+      await authApi.signup(data);
+      // Do not set user — no session is created on signup; user must log in.
       return { success: true };
     } catch (err) {
       const e = authApi.toAuthError(err);

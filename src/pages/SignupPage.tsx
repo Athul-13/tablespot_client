@@ -45,8 +45,8 @@ export function SignupPage() {
       phone: phone.trim() || undefined,
     });
     if (result.success) {
-      toast.success('Account created! Welcome to TableSpot.');
-      navigate('/', { replace: true });
+      toast.success('Account created. Please sign in.');
+      navigate('/login', { replace: true });
       return;
     }
     const err = result.error;

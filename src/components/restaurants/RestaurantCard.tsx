@@ -7,10 +7,11 @@ interface RestaurantCardProps {
   restaurant: Restaurant;
 }
 
+const FALLBACK_IMAGE =
+  'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400&h=250&fit=crop';
+
 export default function RestaurantCard({ restaurant }: RestaurantCardProps) {
-  const imageUrl =
-    restaurant.imageUrl ||
-    'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400&h=250&fit=crop';
+  const imageUrl = restaurant.imageUrl ?? FALLBACK_IMAGE;
 
   return (
     <Card
@@ -40,45 +41,38 @@ export default function RestaurantCard({ restaurant }: RestaurantCardProps) {
         <Typography variant="h6" component="h3" gutterBottom fontWeight={600}>
           {restaurant.name}
         </Typography>
-        {restaurant.cuisine && (
+        {restaurant.cuisineType && (
           <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-            {restaurant.cuisine}
-          </Typography>
-        )}
-        {restaurant.description && (
-          <Typography
-            variant="body2"
-            color="text.secondary"
-            sx={{
-              flex: 1,
-              display: '-webkit-box',
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: 'vertical',
-              overflow: 'hidden',
-            }}
-          >
-            {restaurant.description}
+            {restaurant.cuisineType}
           </Typography>
         )}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mt: 2 }}>
-          {restaurant.rating != null && (
+          {restaurant.averageRating != null && restaurant.averageRating > 0 && (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
               <StarIcon sx={{ fontSize: 18, color: 'primary.main' }} />
               <Typography variant="body2" fontWeight={600}>
-                {restaurant.rating}
+                {restaurant.averageRating.toFixed(1)}
               </Typography>
             </Box>
           )}
-          {restaurant.reviewCount != null && (
-            <Typography variant="body2" color="text.secondary">
-              ({restaurant.reviewCount} reviews)
-            </Typography>
-          )}
-          {restaurant.address && (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, ml: 'auto' }}>
-              <PlaceIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
-              <Typography variant="caption" color="text.secondary" noWrap>
-                {restaurant.address}
+          {restaurant.fullAddress && (
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 0.5,
+                ml: 'auto',
+                minWidth: 0,
+              }}
+            >
+              <PlaceIcon sx={{ fontSize: 16, color: 'text.secondary', flexShrink: 0 }} />
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                noWrap
+                sx={{ overflow: 'hidden', textOverflow: 'ellipsis' }}
+              >
+                {restaurant.fullAddress}
               </Typography>
             </Box>
           )}

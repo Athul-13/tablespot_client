@@ -1,8 +1,28 @@
-import { Box, Container, Typography } from '@mui/material';
+import { useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import {
+  Box,
+  Container,
+  Typography,
+  Grid,
+  CircularProgress,
+  Button,
+} from '@mui/material';
+import { Add as AddIcon } from '@mui/icons-material';
 import { MainLayout } from '@/components/layout';
+import { useRestaurants } from '@/contexts/RestaurantContext';
+import { useAuth } from '@/contexts/AuthContext';
+import RestaurantCard from '@/components/restaurants/RestaurantCard';
 import exploreHeroImage from '@/assets/explore-hero.jpg';
 
 export function ExplorePage() {
+  const { user } = useAuth();
+  const { restaurants, isLoading, error, fetchRestaurants } = useRestaurants();
+
+  useEffect(() => {
+    fetchRestaurants();
+  }, [fetchRestaurants]);
+
   return (
     <MainLayout>
       <Box sx={{ minHeight: '100vh' }}>
@@ -37,11 +57,23 @@ export function ExplorePage() {
             />
           </Box>
 
-          <Container sx={{ position: 'relative', zIndex: 10, pt: { xs: 9, lg: 11 }, px: { xs: 2, sm: 3 } }}>
+          <Container
+            sx={{
+              position: 'relative',
+              zIndex: 10,
+              pt: { xs: 9, lg: 11 },
+              px: { xs: 2, sm: 3 },
+            }}
+          >
             <Typography
               variant="h1"
               sx={{
-                fontSize: { xs: '1.75rem', sm: '2rem', md: '2.75rem', lg: '3.25rem' },
+                fontSize: {
+                  xs: '1.75rem',
+                  sm: '2rem',
+                  md: '2.75rem',
+                  lg: '3.25rem',
+                },
                 color: 'white',
                 fontWeight: 700,
               }}
@@ -60,10 +92,69 @@ export function ExplorePage() {
           </Container>
         </Box>
 
-        <Container maxWidth="lg" sx={{ py: { xs: 4, md: 6 }, px: { xs: 2, sm: 3 } }}>
-          <Typography color="text.secondary" sx={{ fontSize: { xs: '0.9375rem', md: '1rem' } }}>
-            Restaurant listings and search will be available here soon.
-          </Typography>
+        <Container
+          maxWidth="lg"
+          sx={{ py: { xs: 4, md: 6 }, px: { xs: 2, sm: 3 } }}
+        >
+          {isLoading && (
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'center',
+                py: 8,
+              }}
+            >
+              <CircularProgress />
+            </Box>
+          )}
+
+          {!isLoading && error && (
+            <Box sx={{ py: 6, textAlign: 'center' }}>
+              <Typography color="error" sx={{ mb: 2 }}>
+                {error}
+              </Typography>
+              <Button variant="outlined" onClick={() => fetchRestaurants()}>
+                Try again
+              </Button>
+            </Box>
+          )}
+
+          {!isLoading && !error && restaurants.length === 0 && (
+            <Box
+              sx={{
+                py: 8,
+                textAlign: 'center',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 2,
+              }}
+            >
+              <Typography color="text.secondary">
+                No restaurants yet. Be the first to add one.
+              </Typography>
+              {user && (
+                <Button
+                  component={Link}
+                  to="/add-restaurant"
+                  variant="contained"
+                  startIcon={<AddIcon />}
+                >
+                  Add restaurant
+                </Button>
+              )}
+            </Box>
+          )}
+
+          {!isLoading && !error && restaurants.length > 0 && (
+            <Grid container spacing={{ xs: 2, sm: 3, md: 4 }}>
+              {restaurants.map((restaurant) => (
+                <Grid size={{ xs: 12, sm: 6, lg: 4 }} key={restaurant.id}>
+                  <RestaurantCard restaurant={restaurant} />
+                </Grid>
+              ))}
+            </Grid>
+          )}
         </Container>
       </Box>
     </MainLayout>
