@@ -29,7 +29,7 @@ import {
 } from '@mui/icons-material';
 import { MainLayout } from '@/components/layout';
 import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/contexts/ToastContext';
+import { useToast } from '@/contexts/ToastContext.tsx';
 import { useRestaurants } from '@/contexts/RestaurantContext';
 import RestaurantCard from '@/components/restaurants/RestaurantCard';
 import profileHeroImage from '@/assets/profile-hero.jpg';
