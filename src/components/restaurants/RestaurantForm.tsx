@@ -1,4 +1,4 @@
-import { useForm, Controller } from 'react-hook-form';
+import { useForm, Controller, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Box,
@@ -65,7 +65,7 @@ export function RestaurantForm({
     watch,
     formState: { errors },
   } = useForm<RestaurantFormValues>({
-    resolver: zodResolver(restaurantFormSchema),
+    resolver: zodResolver(restaurantFormSchema) as Resolver<RestaurantFormValues>,
     defaultValues: initialData
       ? {
           name: initialData.name ?? '',
