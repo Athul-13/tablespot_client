@@ -58,9 +58,6 @@ export function AddRestaurantPage() {
           isLoading={isSubmitting}
           submitLabel="Add restaurant"
           fieldErrors={fieldErrors}
-          onFieldChange={(field) =>
-            setFieldErrors((prev) => ({ ...prev, [field]: '' }))
-          }
         />
       </Container>
     </MainLayout>

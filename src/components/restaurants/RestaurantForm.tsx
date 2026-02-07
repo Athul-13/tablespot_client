@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Box,
   Typography,
@@ -8,9 +9,16 @@ import {
   InputAdornment,
   Grid,
   Stack,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  FormHelperText,
 } from '@mui/material';
 import { Restaurant as RestaurantIcon, CloudUpload as CloudUploadIcon } from '@mui/icons-material';
 import type { CreateRestaurantInput } from '@/types/restaurant';
+import { restaurantFormSchema, type RestaurantFormValues } from '@/lib/validation';
+import { CUISINE_TYPES } from '@/constants/cuisineTypes';
 
 const CARD_SHADOW = '0 8px 24px -8px hsla(30, 10%, 12%, 0.12)';
 const FALLBACK_PREVIEW =
@@ -27,14 +35,20 @@ export interface RestaurantFormProps {
   onSubmit: (data: CreateRestaurantInput) => void;
   isLoading?: boolean;
   submitLabel?: string;
-  /** Server/validation errors keyed by field name */
+  /** Server/validation errors keyed by field name (merged with form errors) */
   fieldErrors?: Record<string, string>;
-  /** Called when user changes a field so parent can clear that field's error */
-  onFieldChange?: (field: keyof CreateRestaurantInput) => void;
   /** Optional cancel button (e.g. for edit page) */
   onCancel?: () => void;
   cancelLabel?: string;
 }
+
+const defaultValues: RestaurantFormValues = {
+  name: '',
+  fullAddress: '',
+  phone: '',
+  cuisineType: '',
+  imageUrl: '',
+};
 
 export function RestaurantForm({
   initialData,
@@ -42,39 +56,42 @@ export function RestaurantForm({
   isLoading = false,
   submitLabel = 'Add restaurant',
   fieldErrors = {},
-  onFieldChange,
   onCancel,
   cancelLabel = 'Cancel',
 }: RestaurantFormProps) {
-  const [formData, setFormData] = useState({
-    name: initialData?.name ?? '',
-    fullAddress: initialData?.fullAddress ?? '',
-    phone: initialData?.phone ?? '',
-    cuisineType: initialData?.cuisineType ?? '',
-    imageUrl: initialData?.imageUrl ?? '',
+  const {
+    control,
+    handleSubmit,
+    watch,
+    formState: { errors },
+  } = useForm<RestaurantFormValues>({
+    resolver: zodResolver(restaurantFormSchema),
+    defaultValues: initialData
+      ? {
+          name: initialData.name ?? '',
+          fullAddress: initialData.fullAddress ?? '',
+          phone: initialData.phone ?? '',
+          cuisineType: initialData.cuisineType ?? '',
+          imageUrl: initialData.imageUrl ?? '',
+        }
+      : defaultValues,
   });
 
-  const handleChange = (field: keyof CreateRestaurantInput) => (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const value = e.target.value;
-    setFormData((prev) => ({ ...prev, [field]: value }));
-    onFieldChange?.(field);
-  };
+  const imageUrl = watch('imageUrl');
+  const imageUrlTrimmed = typeof imageUrl === 'string' ? imageUrl.trim() : '';
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const payload: CreateRestaurantInput = {
-      name: formData.name.trim(),
-      fullAddress: formData.fullAddress.trim(),
-      phone: formData.phone.trim(),
-      cuisineType: formData.cuisineType.trim(),
-      imageUrl: formData.imageUrl?.trim() || undefined,
-    };
-    onSubmit(payload);
-  };
+  const getError = (field: keyof RestaurantFormValues) =>
+    errors[field]?.message ?? fieldErrors[field];
 
-  const imageUrlTrimmed = formData.imageUrl?.trim();
+  const onValid = (data: RestaurantFormValues) => {
+    onSubmit({
+      name: data.name,
+      fullAddress: data.fullAddress,
+      phone: data.phone,
+      cuisineType: data.cuisineType,
+      imageUrl: data.imageUrl ?? undefined,
+    });
+  };
 
   return (
     <Box sx={{ maxWidth: 700, mx: 'auto' }}>
@@ -120,89 +137,126 @@ export function RestaurantForm({
           p: { xs: 2, sm: 3, md: 4 },
         }}
       >
-        <Box component="form" onSubmit={handleSubmit}>
-          <TextField
-            fullWidth
-            label="Restaurant Name"
+        <Box component="form" onSubmit={handleSubmit(onValid)} noValidate>
+          <Controller
             name="name"
-            value={formData.name}
-            onChange={handleChange('name')}
-            placeholder="e.g., The Golden Fork"
-            required
-            size="small"
-            error={!!fieldErrors.name}
-            helperText={fieldErrors.name}
-            sx={{ mb: 3 }}
+            control={control}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                fullWidth
+                label="Restaurant Name"
+                placeholder="e.g., The Golden Fork"
+                required
+                size="small"
+                error={!!getError('name')}
+                helperText={getError('name')}
+                sx={{ mb: 3 }}
+              />
+            )}
           />
 
-          <TextField
-            fullWidth
-            label="Full Address"
+          <Controller
             name="fullAddress"
-            value={formData.fullAddress}
-            onChange={handleChange('fullAddress')}
-            placeholder="123 Main Street, City, State"
-            required
-            size="small"
-            error={!!fieldErrors.fullAddress}
-            helperText={fieldErrors.fullAddress}
-            sx={{ mb: 3 }}
+            control={control}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                fullWidth
+                label="Full Address"
+                placeholder="123 Main Street, City, State"
+                required
+                size="small"
+                error={!!getError('fullAddress')}
+                helperText={getError('fullAddress')}
+                sx={{ mb: 3 }}
+              />
+            )}
           />
 
           <Grid container spacing={2} sx={{ mb: 3 }}>
             <Grid size={{ xs: 12, md: 6 }}>
-              <TextField
-                fullWidth
-                label="Phone Number"
+              <Controller
                 name="phone"
-                type="tel"
-                value={formData.phone}
-                onChange={handleChange('phone')}
-                placeholder="+1 (555) 000-0000"
-                required
-                size="small"
-                error={!!fieldErrors.phone}
-                helperText={fieldErrors.phone}
+                control={control}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    fullWidth
+                    label="Phone Number"
+                    type="tel"
+                    placeholder="+1 (555) 000-0000"
+                    required
+                    size="small"
+                    error={!!getError('phone')}
+                    helperText={getError('phone')}
+                  />
+                )}
               />
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
-              <TextField
-                fullWidth
-                label="Cuisine Type"
+              <Controller
                 name="cuisineType"
-                value={formData.cuisineType}
-                onChange={handleChange('cuisineType')}
-                placeholder="Italian, Japanese, Mexican..."
-                required
-                size="small"
-                error={!!fieldErrors.cuisineType}
-                helperText={fieldErrors.cuisineType}
+                control={control}
+                render={({ field }) => (
+                  <FormControl
+                    fullWidth
+                    size="small"
+                    required
+                    error={!!getError('cuisineType')}
+                  >
+                    <InputLabel id="cuisine-type-label">Cuisine Type</InputLabel>
+                    <Select
+                      {...field}
+                      labelId="cuisine-type-label"
+                      label="Cuisine Type"
+                      value={field.value || ''}
+                      onChange={(e) => field.onChange(e.target.value)}
+                      onBlur={field.onBlur}
+                    >
+                      <MenuItem value="">
+                        <em>Select cuisine</em>
+                      </MenuItem>
+                      {CUISINE_TYPES.map((cuisine) => (
+                        <MenuItem key={cuisine} value={cuisine}>
+                          {cuisine}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                    {getError('cuisineType') && (
+                      <FormHelperText>{getError('cuisineType')}</FormHelperText>
+                    )}
+                  </FormControl>
+                )}
               />
             </Grid>
           </Grid>
 
-          <TextField
-            fullWidth
-            label="Image URL (optional)"
+          <Controller
             name="imageUrl"
-            type="url"
-            value={formData.imageUrl}
-            onChange={handleChange('imageUrl')}
-            placeholder="https://example.com/restaurant-image.jpg"
-            size="small"
-            error={!!fieldErrors.imageUrl}
-            helperText={fieldErrors.imageUrl}
-            sx={{ mb: imageUrlTrimmed ? 2 : 3 }}
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  <CloudUploadIcon sx={{ color: 'text.secondary', fontSize: 20 }} />
-                </InputAdornment>
-              ),
-            }}
+            control={control}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                fullWidth
+                label="Image URL (optional)"
+                type="url"
+                placeholder="https://example.com/restaurant-image.jpg"
+                size="small"
+                error={!!getError('imageUrl')}
+                helperText={getError('imageUrl')}
+                sx={{ mb: imageUrlTrimmed ? 2 : 3 }}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <CloudUploadIcon sx={{ color: 'text.secondary', fontSize: 20 }} />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            )}
           />
 
-          {/* Image preview when URL is provided */}
           {imageUrlTrimmed && (
             <Box
               sx={{
@@ -218,11 +272,7 @@ export function RestaurantForm({
                 component="img"
                 src={imageUrlTrimmed}
                 alt="Restaurant preview"
-                sx={{
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'cover',
-                }}
+                sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
                 onError={(e) => {
                   (e.target as HTMLImageElement).src = FALLBACK_PREVIEW;
                 }}

@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Box,
   Container,
@@ -32,6 +34,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext.tsx';
 import { useRestaurants } from '@/contexts/RestaurantContext';
 import RestaurantCard from '@/components/restaurants/RestaurantCard';
+import { changePasswordSchema, type ChangePasswordFormValues } from '@/lib/validation';
 import profileHeroImage from '@/assets/profile-hero.jpg';
 
 const CARD_SHADOW = '0 8px 24px -8px hsla(30, 10%, 12%, 0.12)';
@@ -56,31 +59,29 @@ export function ProfilePage() {
   useEffect(() => {
     if (tab === 'restaurants') fetchRestaurants();
   }, [tab, fetchRestaurants]);
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [passwordError, setPasswordError] = useState<string | null>(null);
 
-  const handleChangePassword = async () => {
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors: passwordErrors },
+  } = useForm<ChangePasswordFormValues>({
+    resolver: zodResolver(changePasswordSchema),
+    defaultValues: { currentPassword: '', newPassword: '', confirmPassword: '' },
+  });
+
+  const onChangePassword = async (data: ChangePasswordFormValues) => {
     setPasswordError(null);
-    if (newPassword !== confirmPassword) {
-      setPasswordError('New passwords do not match');
-      return;
-    }
-    if (newPassword.length < 6) {
-      setPasswordError('Password must be at least 6 characters');
-      return;
-    }
     setIsChangingPassword(true);
-    const result = await changePassword(currentPassword, newPassword);
+    const result = await changePassword(data.currentPassword, data.newPassword);
     setIsChangingPassword(false);
     if (result.success) {
-      setCurrentPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
+      reset({ currentPassword: '', newPassword: '', confirmPassword: '' });
       toast.success('Password changed successfully');
     } else {
       setPasswordError(result.error?.message ?? 'Failed to change password');
@@ -344,72 +345,91 @@ export function ProfilePage() {
                     <Typography variant="h2" sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' }, mb: 2 }}>
                       Change password
                     </Typography>
-                    <Stack spacing={2} sx={{ maxWidth: 400, width: '100%' }}>
-                      <TextField
-                        label="Current password"
-                        type={showCurrentPassword ? 'text' : 'password'}
-                        value={currentPassword}
-                        onChange={(e) => setCurrentPassword(e.target.value)}
-                        size="small"
-                        fullWidth
-                        autoComplete="current-password"
-                        InputProps={{
-                          endAdornment: (
-                            <InputAdornment position="end">
-                              <IconButton
-                                onClick={() => setShowCurrentPassword((s) => !s)}
-                                edge="end"
-                                aria-label="toggle current password visibility"
-                              >
-                                {showCurrentPassword ? <VisibilityOff /> : <Visibility />}
-                              </IconButton>
-                            </InputAdornment>
-                          ),
-                        }}
+                    <Stack
+                      component="form"
+                      onSubmit={handleSubmit(onChangePassword)}
+                      noValidate
+                      spacing={2}
+                      sx={{ maxWidth: 400, width: '100%' }}
+                    >
+                      <Controller
+                        name="currentPassword"
+                        control={control}
+                        render={({ field }) => (
+                          <TextField
+                            {...field}
+                            label="Current password"
+                            type={showCurrentPassword ? 'text' : 'password'}
+                            size="small"
+                            fullWidth
+                            autoComplete="current-password"
+                            error={!!passwordErrors.currentPassword}
+                            helperText={passwordErrors.currentPassword?.message}
+                            InputProps={{
+                              endAdornment: (
+                                <InputAdornment position="end">
+                                  <IconButton
+                                    onClick={() => setShowCurrentPassword((s) => !s)}
+                                    edge="end"
+                                    aria-label="toggle current password visibility"
+                                  >
+                                    {showCurrentPassword ? <VisibilityOff /> : <Visibility />}
+                                  </IconButton>
+                                </InputAdornment>
+                              ),
+                            }}
+                          />
+                        )}
                       />
-                      <TextField
-                        label="New password"
-                        type={showNewPassword ? 'text' : 'password'}
-                        value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
-                        size="small"
-                        fullWidth
-                        autoComplete="new-password"
-                        helperText="At least 6 characters"
-                        InputProps={{
-                          endAdornment: (
-                            <InputAdornment position="end">
-                              <IconButton
-                                onClick={() => setShowNewPassword((s) => !s)}
-                                edge="end"
-                                aria-label="toggle new password visibility"
-                              >
-                                {showNewPassword ? <VisibilityOff /> : <Visibility />}
-                              </IconButton>
-                            </InputAdornment>
-                          ),
-                        }}
+                      <Controller
+                        name="newPassword"
+                        control={control}
+                        render={({ field }) => (
+                          <TextField
+                            {...field}
+                            label="New password"
+                            type={showNewPassword ? 'text' : 'password'}
+                            size="small"
+                            fullWidth
+                            autoComplete="new-password"
+                            error={!!passwordErrors.newPassword}
+                            helperText={passwordErrors.newPassword?.message ?? 'At least 6 characters'}
+                            InputProps={{
+                              endAdornment: (
+                                <InputAdornment position="end">
+                                  <IconButton
+                                    onClick={() => setShowNewPassword((s) => !s)}
+                                    edge="end"
+                                    aria-label="toggle new password visibility"
+                                  >
+                                    {showNewPassword ? <VisibilityOff /> : <Visibility />}
+                                  </IconButton>
+                                </InputAdornment>
+                              ),
+                            }}
+                          />
+                        )}
                       />
-                      <TextField
-                        label="Confirm new password"
-                        type="password"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        size="small"
-                        fullWidth
-                        autoComplete="new-password"
-                        error={!!passwordError}
-                        helperText={passwordError}
+                      <Controller
+                        name="confirmPassword"
+                        control={control}
+                        render={({ field }) => (
+                          <TextField
+                            {...field}
+                            label="Confirm new password"
+                            type="password"
+                            size="small"
+                            fullWidth
+                            autoComplete="new-password"
+                            error={!!passwordErrors.confirmPassword || !!passwordError}
+                            helperText={passwordErrors.confirmPassword?.message ?? passwordError}
+                          />
+                        )}
                       />
                       <Button
+                        type="submit"
                         variant="contained"
-                        onClick={handleChangePassword}
-                        disabled={
-                          isChangingPassword ||
-                          !currentPassword ||
-                          !newPassword ||
-                          !confirmPassword
-                        }
+                        disabled={isChangingPassword}
                       >
                         {isChangingPassword ? 'Changing…' : 'Change password'}
                       </Button>

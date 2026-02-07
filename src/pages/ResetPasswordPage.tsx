@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Alert,
   Box,
@@ -10,32 +12,26 @@ import {
 } from '@mui/material';
 import { Restaurant as RestaurantIcon } from '@mui/icons-material';
 import { useAuth } from '@/contexts/AuthContext';
+import { resetPasswordSchema, type ResetPasswordFormValues } from '@/lib/validation';
 
 export function ResetPasswordPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { resetPassword, error, clearError } = useAuth();
   const token = searchParams.get('token') ?? '';
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [confirmError, setConfirmError] = useState<string | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const { control, handleSubmit } = useForm<ResetPasswordFormValues>({
+    resolver: zodResolver(resetPasswordSchema),
+    defaultValues: { newPassword: '', confirmPassword: '' },
+  });
+
+  const onSubmit = async (data: ResetPasswordFormValues) => {
     clearError();
     setSubmitError(null);
-    setConfirmError(null);
-    if (newPassword !== confirmPassword) {
-      setConfirmError('Passwords do not match');
-      return;
-    }
-    const result = await resetPassword(token, newPassword);
+    const result = await resetPassword(token, data.newPassword);
     if (result.success) {
-      navigate('/login', {
-        replace: true,
-        state: { message: 'Password reset successfully. You can log in now.' },
-      });
+      navigate('/login', { replace: true, state: { message: 'Password reset successfully. You can log in now.' } });
       return;
     }
     setSubmitError(result.error?.message ?? 'Failed to reset password');
@@ -224,62 +220,64 @@ export function ResetPasswordPage() {
         </Typography>
 
         {/* Error */}
-        {(error || submitError || confirmError) && (
+        {(error || submitError) && (
           <Alert
             severity="error"
             onClose={() => {
               clearError();
               setSubmitError(null);
-              setConfirmError(null);
             }}
             sx={{ flexShrink: 0 }}
           >
-            {confirmError ?? submitError ?? error}
+            {submitError ?? error}
           </Alert>
         )}
 
         {/* Form */}
         <Box
           component="form"
-          onSubmit={handleSubmit}
+          onSubmit={handleSubmit(onSubmit)}
           noValidate
           sx={{ display: 'flex', flexDirection: 'column', gap: 'clamp(4px, 1.2dvh, 14px)' }}
         >
-          <TextField
-            fullWidth
-            label="New password"
-            type="password"
-            placeholder="••••••••"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            required
-            autoComplete="new-password"
-            slotProps={{
-              input: {
-                sx: { fontSize: 'clamp(14px, 2.5dvh, 16px)' },
-              },
-            }}
-            sx={{ '& .MuiInputBase-root': { minHeight: 'clamp(40px, 10dvh, 56px)' } }}
+          <Controller
+            name="newPassword"
+            control={control}
+            render={({ field, fieldState }) => (
+              <TextField
+                {...field}
+                fullWidth
+                label="New password"
+                type="password"
+                placeholder="••••••••"
+                required
+                autoComplete="new-password"
+                error={!!fieldState.error}
+                helperText={fieldState.error?.message}
+                slotProps={{ input: { sx: { fontSize: 'clamp(14px, 2.5dvh, 16px)' } } }}
+                sx={{ '& .MuiInputBase-root': { minHeight: 'clamp(40px, 10dvh, 56px)' } }}
+              />
+            )}
           />
-          <TextField
-            fullWidth
-            label="Confirm password"
-            type="password"
-            placeholder="••••••••"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            required
-            autoComplete="new-password"
-            error={Boolean(confirmError)}
-            helperText={confirmError}
-            slotProps={{
-              input: {
-                sx: { fontSize: 'clamp(14px, 2.5dvh, 16px)' },
-              },
-            }}
-            sx={{ '& .MuiInputBase-root': { minHeight: 'clamp(40px, 10dvh, 56px)' } }}
+          <Controller
+            name="confirmPassword"
+            control={control}
+            render={({ field, fieldState }) => (
+              <TextField
+                {...field}
+                fullWidth
+                label="Confirm password"
+                type="password"
+                placeholder="••••••••"
+                required
+                autoComplete="new-password"
+                error={!!fieldState.error}
+                helperText={fieldState.error?.message}
+                slotProps={{ input: { sx: { fontSize: 'clamp(14px, 2.5dvh, 16px)' } } }}
+                sx={{ '& .MuiInputBase-root': { minHeight: 'clamp(40px, 10dvh, 56px)' } }}
+              />
+            )}
           />
-
           <Button
             type="submit"
             variant="contained"

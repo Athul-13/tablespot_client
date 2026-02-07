@@ -162,9 +162,6 @@ export function EditRestaurantPage() {
           isLoading={isSubmitting}
           submitLabel="Save changes"
           fieldErrors={fieldErrors}
-          onFieldChange={(field) =>
-            setFieldErrors((prev) => ({ ...prev, [field]: '' }))
-          }
           onCancel={() => navigate(`/restaurants/${id}`)}
           cancelLabel="Cancel"
         />

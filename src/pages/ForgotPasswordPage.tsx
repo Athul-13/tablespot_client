@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Alert,
   Box,
@@ -11,18 +13,22 @@ import {
 } from '@mui/material';
 import { Email as EmailIcon, Restaurant as RestaurantIcon } from '@mui/icons-material';
 import { useAuth } from '@/contexts/AuthContext';
+import { forgotPasswordSchema, type ForgotPasswordFormValues } from '@/lib/validation';
 
 export function ForgotPasswordPage() {
   const { forgotPassword, error, clearError } = useAuth();
-  const [email, setEmail] = useState('');
   const [sent, setSent] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const { control, handleSubmit } = useForm<ForgotPasswordFormValues>({
+    resolver: zodResolver(forgotPasswordSchema),
+    defaultValues: { email: '' },
+  });
+
+  const onSubmit = async (data: ForgotPasswordFormValues) => {
     clearError();
     setSubmitError(null);
-    const result = await forgotPassword(email);
+    const result = await forgotPassword(data.email);
     if (result.success) {
       setSent(true);
       return;
@@ -171,34 +177,36 @@ export function ForgotPasswordPage() {
         {/* Form */}
         <Box
           component="form"
-          onSubmit={handleSubmit}
+          onSubmit={handleSubmit(onSubmit)}
           noValidate
           sx={{ display: 'flex', flexDirection: 'column', gap: 'clamp(4px, 1.2dvh, 14px)' }}
         >
-          <TextField
-            fullWidth
-            label="Email address"
-            type="email"
-            placeholder="you@example.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            autoComplete="email"
-            slotProps={{
-              input: {
-                sx: { fontSize: 'clamp(14px, 2.5dvh, 16px)' },
-              },
-            }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <EmailIcon sx={{ color: 'text.secondary', fontSize: 'clamp(18px, 3dvh, 24px)' }} />
-                </InputAdornment>
-              ),
-            }}
-            sx={{ '& .MuiInputBase-root': { minHeight: 'clamp(40px, 10dvh, 56px)' } }}
+          <Controller
+            name="email"
+            control={control}
+            render={({ field, fieldState }) => (
+              <TextField
+                {...field}
+                fullWidth
+                label="Email address"
+                type="email"
+                placeholder="you@example.com"
+                required
+                autoComplete="email"
+                error={!!fieldState.error}
+                helperText={fieldState.error?.message}
+                slotProps={{ input: { sx: { fontSize: 'clamp(14px, 2.5dvh, 16px)' } } }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <EmailIcon sx={{ color: 'text.secondary', fontSize: 'clamp(18px, 3dvh, 24px)' }} />
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{ '& .MuiInputBase-root': { minHeight: 'clamp(40px, 10dvh, 56px)' } }}
+              />
+            )}
           />
-
           <Button
             type="submit"
             variant="contained"
