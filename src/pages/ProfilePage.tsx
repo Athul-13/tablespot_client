@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Box,
@@ -13,6 +13,8 @@ import {
   Chip,
   ToggleButtonGroup,
   ToggleButton,
+  Grid,
+  CircularProgress,
 } from '@mui/material';
 import {
   Person as PersonIcon,
@@ -23,10 +25,13 @@ import {
   VisibilityOff,
   Add as AddIcon,
   ChevronRight as ChevronRightIcon,
+  Edit as EditIcon,
 } from '@mui/icons-material';
 import { MainLayout } from '@/components/layout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
+import { useRestaurants } from '@/contexts/RestaurantContext';
+import RestaurantCard from '@/components/restaurants/RestaurantCard';
 import profileHeroImage from '@/assets/profile-hero.jpg';
 
 const CARD_SHADOW = '0 8px 24px -8px hsla(30, 10%, 12%, 0.12)';
@@ -41,7 +46,16 @@ type TabValue = 'account' | 'restaurants';
 export function ProfilePage() {
   const { user, changePassword } = useAuth();
   const { toast } = useToast();
+  const { restaurants, isLoading, fetchRestaurants } = useRestaurants();
   const [tab, setTab] = useState<TabValue>('account');
+
+  const myRestaurants = user
+    ? restaurants.filter((r) => r.createdByUserId === user.id)
+    : [];
+
+  useEffect(() => {
+    if (tab === 'restaurants') fetchRestaurants();
+  }, [tab, fetchRestaurants]);
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -405,66 +419,118 @@ export function ProfilePage() {
               )}
 
               {tab === 'restaurants' && (
-                <Box
-                  sx={{
-                    py: { xs: 4, sm: 6 },
-                    px: { xs: 1, sm: 2 },
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    textAlign: 'center',
-                  }}
-                >
-                  <Box
-                    sx={{
-                      width: { xs: 64, sm: 80 },
-                      height: { xs: 64, sm: 80 },
-                      borderRadius: '20px',
-                      background: GRADIENT_PRIMARY,
-                      boxShadow: ICON_GLOW,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      mb: { xs: 2, sm: 3 },
-                      transition: 'transform 0.3s ease',
-                      '&:hover': { transform: 'scale(1.05)' },
-                    }}
-                  >
-                    <RestaurantIcon sx={{ color: 'white', fontSize: { xs: 32, sm: 40 } }} />
-                  </Box>
-                  <Typography
-                    variant="h2"
-                    sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' }, mb: 1, color: 'text.primary' }}
-                  >
-                    No restaurants yet
-                  </Typography>
-                  <Typography color="text.secondary" sx={{ mb: { xs: 2, sm: 3 }, maxWidth: 320, fontSize: { xs: '0.9375rem', sm: '1rem' } }}>
-                    Your restaurant list will appear here. Add your first spot or explore
-                    what others have shared.
-                  </Typography>
-                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ width: { xs: '100%', sm: 'auto' }, maxWidth: 360 }}>
-                    <Button
-                      component={Link}
-                      to="/add-restaurant"
-                      variant="contained"
-                      startIcon={<AddIcon />}
-                      fullWidth={false}
-                      sx={{ width: { xs: '100%', sm: 'auto' } }}
+                <Box sx={{ py: { xs: 2, sm: 3 }, px: { xs: 1, sm: 2 } }}>
+                  {isLoading ? (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
+                      <CircularProgress />
+                    </Box>
+                  ) : myRestaurants.length === 0 ? (
+                    <Box
+                      sx={{
+                        py: { xs: 4, sm: 6 },
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        textAlign: 'center',
+                      }}
                     >
-                      Add restaurant
-                    </Button>
-                    <Button
-                      component={Link}
-                      to="/restaurants"
-                      variant="outlined"
-                      endIcon={<ChevronRightIcon />}
-                      fullWidth={false}
-                      sx={{ width: { xs: '100%', sm: 'auto' } }}
-                    >
-                      Explore restaurants
-                    </Button>
-                  </Stack>
+                      <Box
+                        sx={{
+                          width: { xs: 64, sm: 80 },
+                          height: { xs: 64, sm: 80 },
+                          borderRadius: '20px',
+                          background: GRADIENT_PRIMARY,
+                          boxShadow: ICON_GLOW,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          mb: { xs: 2, sm: 3 },
+                          transition: 'transform 0.3s ease',
+                          '&:hover': { transform: 'scale(1.05)' },
+                        }}
+                      >
+                        <RestaurantIcon sx={{ color: 'white', fontSize: { xs: 32, sm: 40 } }} />
+                      </Box>
+                      <Typography
+                        variant="h2"
+                        sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' }, mb: 1, color: 'text.primary' }}
+                      >
+                        No restaurants yet
+                      </Typography>
+                      <Typography color="text.secondary" sx={{ mb: { xs: 2, sm: 3 }, maxWidth: 320, fontSize: { xs: '0.9375rem', sm: '1rem' } }}>
+                        Your restaurant list will appear here. Add your first spot or explore
+                        what others have shared.
+                      </Typography>
+                      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ width: { xs: '100%', sm: 'auto' }, maxWidth: 360 }}>
+                        <Button
+                          component={Link}
+                          to="/add-restaurant"
+                          variant="contained"
+                          startIcon={<AddIcon />}
+                          fullWidth={false}
+                          sx={{ width: { xs: '100%', sm: 'auto' } }}
+                        >
+                          Add restaurant
+                        </Button>
+                        <Button
+                          component={Link}
+                          to="/restaurants"
+                          variant="outlined"
+                          endIcon={<ChevronRightIcon />}
+                          fullWidth={false}
+                          sx={{ width: { xs: '100%', sm: 'auto' } }}
+                        >
+                          Explore restaurants
+                        </Button>
+                      </Stack>
+                    </Box>
+                  ) : (
+                    <>
+                      <Stack
+                        direction={{ xs: 'column', sm: 'row' }}
+                        alignItems={{ sm: 'center' }}
+                        justifyContent="space-between"
+                        spacing={2}
+                        sx={{ mb: 3 }}
+                      >
+                        <Typography variant="h2" sx={{ fontSize: '1.25rem' }}>
+                          Your restaurants
+                        </Typography>
+                        <Button
+                          component={Link}
+                          to="/add-restaurant"
+                          variant="contained"
+                          size="small"
+                          startIcon={<AddIcon />}
+                        >
+                          Add restaurant
+                        </Button>
+                      </Stack>
+                      <Grid container spacing={{ xs: 2, sm: 3, md: 4 }}>
+                        {myRestaurants.map((restaurant) => (
+                          <Grid size={{ xs: 12, sm: 6, lg: 4 }} key={restaurant.id}>
+                            <Box sx={{ position: 'relative' }}>
+                              <RestaurantCard restaurant={restaurant} />
+                              <Button
+                                component={Link}
+                                to={`/restaurants/${restaurant.id}/edit`}
+                                variant="outlined"
+                                size="small"
+                                startIcon={<EditIcon />}
+                                sx={{
+                                  mt: 1.5,
+                                  width: '100%',
+                                }}
+                              >
+                                Edit
+                              </Button>
+                            </Box>
+                          </Grid>
+                        ))}
+                      </Grid>
+                    </>
+                  )}
                 </Box>
               )}
             </Box>

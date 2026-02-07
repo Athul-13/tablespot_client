@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRestaurants } from '@/contexts/RestaurantContext';
@@ -12,6 +13,7 @@ import {
   Paper,
   Grid,
   Chip,
+  CircularProgress,
 } from '@mui/material';
 import {
   ArrowForward as ArrowForwardIcon,
@@ -25,8 +27,12 @@ import {
 
 export function LandingPage() {
   const { user } = useAuth();
-  const { restaurants } = useRestaurants();
+  const { restaurants, isLoading, fetchRestaurants } = useRestaurants();
   const featuredRestaurants = restaurants.slice(0, 3);
+
+  useEffect(() => {
+    fetchRestaurants();
+  }, [fetchRestaurants]);
 
   const stats = [
     { icon: PlaceIcon, value: '500+', label: 'Restaurants' },
@@ -378,15 +384,25 @@ export function LandingPage() {
               </Button>
             </Box>
 
-            <Grid container spacing={{ xs: 2, sm: 3, md: 4 }}>
-              {featuredRestaurants.map((restaurant, index) => (
-                <Grid size={{ xs: 12, md: 6, lg: 4 }} key={restaurant.id}>
-                  <Box sx={{ animationDelay: `${index * 0.1}s` }}>
-                    <RestaurantCard restaurant={restaurant} />
-                  </Box>
-                </Grid>
-              ))}
-            </Grid>
+            {isLoading && restaurants.length === 0 ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
+                <CircularProgress />
+              </Box>
+            ) : featuredRestaurants.length === 0 ? (
+              <Typography color="text.secondary" sx={{ py: 4 }}>
+                No featured restaurants yet. Explore all listings or add your own.
+              </Typography>
+            ) : (
+              <Grid container spacing={{ xs: 2, sm: 3, md: 4 }}>
+                {featuredRestaurants.map((restaurant, index) => (
+                  <Grid size={{ xs: 12, md: 6, lg: 4 }} key={restaurant.id}>
+                    <Box sx={{ animationDelay: `${index * 0.1}s` }}>
+                      <RestaurantCard restaurant={restaurant} />
+                    </Box>
+                  </Grid>
+                ))}
+              </Grid>
+            )}
           </Container>
         </Box>
 
