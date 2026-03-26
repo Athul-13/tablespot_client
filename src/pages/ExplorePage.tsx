@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Box,
@@ -7,6 +7,10 @@ import {
   Grid,
   CircularProgress,
   Button,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
 } from '@mui/material';
 import { Add as AddIcon } from '@mui/icons-material';
 import { MainLayout } from '@/components/layout';
@@ -14,14 +18,25 @@ import { useRestaurants } from '@/contexts/RestaurantContext';
 import { useAuth } from '@/contexts/AuthContext';
 import RestaurantCard from '@/components/restaurants/RestaurantCard';
 import exploreHeroImage from '@/assets/explore-hero.jpg';
+import { CUISINE_TYPES } from '@/constants/cuisineTypes';
 
 export function ExplorePage() {
   const { user } = useAuth();
   const { restaurants, isLoading, error, fetchRestaurants } = useRestaurants();
+  const [selectedCuisine, setSelectedCuisine] = useState<string>('');
 
   useEffect(() => {
     fetchRestaurants();
   }, [fetchRestaurants]);
+
+  async function handleCuisineChange(nextCuisineType: string) {
+    setSelectedCuisine(nextCuisineType);
+    if (nextCuisineType.trim().length === 0) {
+      await fetchRestaurants();
+      return;
+    }
+    await fetchRestaurants({ cuisineType: nextCuisineType });
+  }
 
   return (
     <MainLayout>
@@ -96,6 +111,33 @@ export function ExplorePage() {
           maxWidth="lg"
           sx={{ py: { xs: 4, md: 6 }, px: { xs: 2, sm: 3 } }}
         >
+          <Box sx={{ mb: 3, display: 'flex', justifyContent: 'flex-end' }}>
+            <FormControl size="small" sx={{ minWidth: 220 }}>
+              <InputLabel id="explore-cuisine-filter-label">
+                Cuisine
+              </InputLabel>
+              <Select
+                labelId="explore-cuisine-filter-label"
+                id="explore-cuisine-filter"
+                value={selectedCuisine}
+                label="Cuisine"
+                onChange={(e) =>
+                  handleCuisineChange(String(e.target.value ?? ''))
+                }
+                disabled={isLoading}
+              >
+                <MenuItem value="">
+                  <em>All</em>
+                </MenuItem>
+                {CUISINE_TYPES.map((c) => (
+                  <MenuItem key={c} value={c}>
+                    {c}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Box>
+
           {isLoading && (
             <Box
               sx={{
