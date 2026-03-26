@@ -49,8 +49,6 @@ export async function getRestaurantById(id: string): Promise<Restaurant> {
   return res.data;
 }
 
-export async function searchRestaurent()
-
 export async function createRestaurant(
   data: CreateRestaurantInput
 ): Promise<Restaurant> {

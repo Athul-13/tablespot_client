@@ -18,7 +18,7 @@ import {
   Restaurant as RestaurantIcon,
 } from '@mui/icons-material';
 import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/contexts/toastContext';
+import { useToast } from '@/contexts/ToastContext';
 
 export function SignupPage() {
   const navigate = useNavigate();

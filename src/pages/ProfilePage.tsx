@@ -31,7 +31,7 @@ import {
 } from '@mui/icons-material';
 import { MainLayout } from '@/components/layout';
 import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/contexts/ToastContext.tsx';
+import { useToast } from '@/contexts/ToastContext';
 import { useRestaurants } from '@/contexts/RestaurantContext';
 import RestaurantCard from '@/components/restaurants/RestaurantCard';
 import { changePasswordSchema, type ChangePasswordFormValues } from '@/lib/validation';

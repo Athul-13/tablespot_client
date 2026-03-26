@@ -9,7 +9,7 @@ import {
 } from '@mui/material';
 import { MainLayout } from '@/components/layout';
 import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/contexts/ToastContext.tsx';
+import { useToast } from '@/contexts/ToastContext';
 import { useRestaurants } from '@/contexts/RestaurantContext';
 import {
   getRestaurantById,

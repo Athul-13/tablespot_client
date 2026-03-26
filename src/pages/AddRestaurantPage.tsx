@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Container } from '@mui/material';
 import { MainLayout } from '@/components/layout';
-import { useToast } from '@/contexts/ToastContext.tsx';
+import { useToast } from '@/contexts/ToastContext';
 import { useRestaurants } from '@/contexts/RestaurantContext';
 import { createRestaurant, toRestaurantApiError } from '@/api/restaurants';
 import { RestaurantForm } from '@/components/restaurants/RestaurantForm';

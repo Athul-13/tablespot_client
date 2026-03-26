@@ -18,7 +18,7 @@ import {
   Restaurant as RestaurantIcon,
 } from '@mui/icons-material';
 import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/contexts/ToastContext.tsx';
+import { useToast } from '@/contexts/ToastContext';
 import { loginSchema, type LoginFormValues } from '@/lib/validation';
 import { useState } from 'react';
 
