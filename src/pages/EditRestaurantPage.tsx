@@ -157,6 +157,8 @@ export function EditRestaurantPage() {
             phone: restaurant.phone,
             cuisineType: restaurant.cuisineType,
             imageUrl: restaurant.imageUrl ?? undefined,
+            latitude: restaurant.latitude ?? undefined,
+            longitude: restaurant.longitude ?? undefined,
           }}
           onSubmit={handleSubmit}
           isLoading={isSubmitting}

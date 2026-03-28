@@ -36,6 +36,12 @@ export async function listRestaurants(
     params: params
       ? {
           ...(params.cuisineType != null && { cuisineType: params.cuisineType }),
+            ...(params.sort != null && { sort: params.sort }),
+            ...(params.lat != null && { lat: params.lat }),
+            ...(params.lng != null && { lng: params.lng }),
+            ...(params.maxDistanceKm != null && {
+              maxDistanceKm: params.maxDistanceKm,
+            }),
           ...(params.limit != null && { limit: params.limit }),
           ...(params.offset != null && { offset: params.offset }),
         }

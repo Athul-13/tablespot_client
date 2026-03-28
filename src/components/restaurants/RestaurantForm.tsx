@@ -27,7 +27,7 @@ const FALLBACK_PREVIEW =
 /** Initial values for the form (e.g. from Restaurant for edit mode). */
 export type RestaurantFormInitialData = Pick<
   CreateRestaurantInput,
-  'name' | 'fullAddress' | 'phone' | 'cuisineType' | 'imageUrl'
+  'name' | 'fullAddress' | 'phone' | 'cuisineType' | 'imageUrl' | 'latitude' | 'longitude'
 >;
 
 export interface RestaurantFormProps {
@@ -48,6 +48,8 @@ const defaultValues: RestaurantFormValues = {
   phone: '',
   cuisineType: '',
   imageUrl: '',
+  latitude: '',
+  longitude: '',
 };
 
 export function RestaurantForm({
@@ -73,6 +75,14 @@ export function RestaurantForm({
           phone: initialData.phone ?? '',
           cuisineType: initialData.cuisineType ?? '',
           imageUrl: initialData.imageUrl ?? '',
+          latitude:
+            initialData.latitude !== undefined && initialData.latitude !== null
+              ? String(initialData.latitude)
+              : '',
+          longitude:
+            initialData.longitude !== undefined && initialData.longitude !== null
+              ? String(initialData.longitude)
+              : '',
         }
       : defaultValues,
   });
@@ -84,12 +94,22 @@ export function RestaurantForm({
     errors[field]?.message ?? fieldErrors[field];
 
   const onValid = (data: RestaurantFormValues) => {
+    const latitude =
+      data.latitude !== undefined && data.latitude.trim().length > 0
+        ? Number(data.latitude)
+        : undefined;
+    const longitude =
+      data.longitude !== undefined && data.longitude.trim().length > 0
+        ? Number(data.longitude)
+        : undefined;
     onSubmit({
       name: data.name,
       fullAddress: data.fullAddress,
       phone: data.phone,
       cuisineType: data.cuisineType,
       imageUrl: data.imageUrl ?? undefined,
+      latitude,
+      longitude,
     });
   };
 
@@ -227,6 +247,47 @@ export function RestaurantForm({
                       <FormHelperText>{getError('cuisineType')}</FormHelperText>
                     )}
                   </FormControl>
+                )}
+              />
+            </Grid>
+          </Grid>
+
+          <Grid container spacing={2} sx={{ mb: 3 }}>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <Controller
+                name="latitude"
+                control={control}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    fullWidth
+                    label="Latitude (optional)"
+                    type="number"
+                    placeholder="e.g., 10.01586"
+                    size="small"
+                    error={!!getError('latitude')}
+                    helperText={getError('latitude')}
+                    inputProps={{ step: 'any', min: -90, max: 90 }}
+                  />
+                )}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <Controller
+                name="longitude"
+                control={control}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    fullWidth
+                    label="Longitude (optional)"
+                    type="number"
+                    placeholder="e.g., 76.34187"
+                    size="small"
+                    error={!!getError('longitude')}
+                    helperText={getError('longitude')}
+                    inputProps={{ step: 'any', min: -180, max: 180 }}
+                  />
                 )}
               />
             </Grid>

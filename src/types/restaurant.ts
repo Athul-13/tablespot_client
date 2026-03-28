@@ -6,6 +6,8 @@ export interface Restaurant {
   phone: string;
   cuisineType: string;
   imageUrl: string | null;
+  latitude: number | null;
+  longitude: number | null;
   createdByUserId: string;
   createdAt: string;
   updatedAt: string;
@@ -19,6 +21,8 @@ export interface CreateRestaurantInput {
   phone: string;
   cuisineType: string;
   imageUrl?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
 }
 
 /** Payload for updating a restaurant (matches server updateRestaurantSchema). */
@@ -28,6 +32,8 @@ export interface UpdateRestaurantInput {
   phone?: string;
   cuisineType?: string;
   imageUrl?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
 }
 
 /** Comment as returned by listByRestaurant (matches server CommentEntity with user). */
@@ -51,6 +57,10 @@ export interface RestaurantRatingResult {
 /** Query params for list restaurants (optional). */
 export interface ListRestaurantsParams {
   cuisineType?: string;
+  sort?: 'newest' | 'nearest';
+  lat?: number;
+  lng?: number;
+  maxDistanceKm?: number;
   limit?: number;
   offset?: number;
 }

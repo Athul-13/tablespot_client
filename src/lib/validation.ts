@@ -14,6 +14,10 @@ const PHONE_MAX_LENGTH = 10;
 const COMMENT_MIN_LENGTH = 1;
 const COMMENT_MAX_LENGTH = 2000;
 const IMAGE_URL_MAX_LENGTH = 2048;
+const LATITUDE_MIN = -90;
+const LATITUDE_MAX = 90;
+const LONGITUDE_MIN = -180;
+const LONGITUDE_MAX = 180;
 
 // Phone: optional + at start, then digits, spaces, dashes, dots, parentheses (international)
 const PHONE_REGEX = /^\+?[\d\s\-.()]+$/;
@@ -142,6 +146,52 @@ export const restaurantFormSchema = z.object({
     .min(1, 'Please select a cuisine type')
     .trim(),
   imageUrl: optionalImageUrlSchema,
+  latitude: z
+    .string()
+    .trim()
+    .optional()
+    .refine((v) => v === undefined || v === '' || !Number.isNaN(Number(v)), {
+      message: 'Latitude must be a valid number',
+    })
+    .refine((v) => {
+      if (v === undefined || v === '') return true;
+      const num = Number(v);
+      return num >= LATITUDE_MIN && num <= LATITUDE_MAX;
+    }, {
+      message: `Latitude must be between ${LATITUDE_MIN} and ${LATITUDE_MAX}`,
+    }),
+  longitude: z
+    .string()
+    .trim()
+    .optional()
+    .refine((v) => v === undefined || v === '' || !Number.isNaN(Number(v)), {
+      message: 'Longitude must be a valid number',
+    })
+    .refine(
+      (v) => {
+        if (v === undefined || v === '') return true;
+        const num = Number(v);
+        return num >= LONGITUDE_MIN && num <= LONGITUDE_MAX;
+      },
+      {
+        message: `Longitude must be between ${LONGITUDE_MIN} and ${LONGITUDE_MAX}`,
+      }
+    ),
+}).superRefine((data, ctx) => {
+  const hasLat = data.latitude !== undefined && data.latitude !== '';
+  const hasLng = data.longitude !== undefined && data.longitude !== '';
+  if (hasLat !== hasLng) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['latitude'],
+      message: 'Latitude and longitude must be entered together',
+    });
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['longitude'],
+      message: 'Latitude and longitude must be entered together',
+    });
+  }
 });
 
 // ---------------------------------------------------------------------------

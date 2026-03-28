@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Box,
@@ -12,30 +12,107 @@ import {
   MenuItem,
   Select,
 } from '@mui/material';
-import { Add as AddIcon } from '@mui/icons-material';
+import { Add as AddIcon, MyLocation as MyLocationIcon } from '@mui/icons-material';
 import { MainLayout } from '@/components/layout';
 import { useRestaurants } from '@/contexts/RestaurantContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/contexts/ToastContext';
 import RestaurantCard from '@/components/restaurants/RestaurantCard';
 import exploreHeroImage from '@/assets/explore-hero.jpg';
 import { CUISINE_TYPES } from '@/constants/cuisineTypes';
 
+interface UserCoordinates {
+  lat: number;
+  lng: number;
+}
+
 export function ExplorePage() {
   const { user } = useAuth();
+  const { toast } = useToast();
   const { restaurants, isLoading, error, fetchRestaurants } = useRestaurants();
   const [selectedCuisine, setSelectedCuisine] = useState<string>('');
+  const [userCoordinates, setUserCoordinates] = useState<UserCoordinates | null>(null);
+  const [isLocating, setIsLocating] = useState(false);
+  const [isLocationDenied, setIsLocationDenied] = useState(false);
+
+  const fetchWithFilters = useCallback(
+    async (cuisineType: string, coordinates?: UserCoordinates | null) => {
+      const params: {
+        cuisineType?: string;
+        sort?: 'nearest';
+        lat?: number;
+        lng?: number;
+      } = {};
+      if (cuisineType.trim().length > 0) params.cuisineType = cuisineType.trim();
+      if (coordinates) {
+        params.sort = 'nearest';
+        params.lat = coordinates.lat;
+        params.lng = coordinates.lng;
+      }
+      await fetchRestaurants(Object.keys(params).length > 0 ? params : undefined);
+    },
+    [fetchRestaurants]
+  );
+
+  const requestLocationAndSort = useCallback(
+    (showPermissionMessage: boolean) =>
+      new Promise<void>((resolve) => {
+        if (!navigator.geolocation) {
+          if (showPermissionMessage) {
+            toast.info('Location is not supported in this browser');
+          }
+          resolve();
+          return;
+        }
+        setIsLocating(true);
+        navigator.geolocation.getCurrentPosition(
+          async (position) => {
+            const nextCoordinates = {
+              lat: position.coords.latitude,
+              lng: position.coords.longitude,
+            };
+            setUserCoordinates(nextCoordinates);
+            setIsLocationDenied(false);
+            await fetchWithFilters(selectedCuisine, nextCoordinates);
+            setIsLocating(false);
+            resolve();
+          },
+          () => {
+            setIsLocationDenied(true);
+            if (showPermissionMessage) {
+              toast.info(
+                'Location access is required for nearest sorting. Enable it in browser site settings and try again.'
+              );
+            }
+            setIsLocating(false);
+            resolve();
+          },
+          {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0,
+          }
+        );
+      }),
+    [fetchWithFilters, selectedCuisine, toast]
+  );
 
   useEffect(() => {
-    fetchRestaurants();
-  }, [fetchRestaurants]);
+    let cancelled = false;
+    const load = async () => {
+      await fetchWithFilters('', null);
+      if (cancelled || !user) return;
+      await requestLocationAndSort(false);
+    };
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [fetchWithFilters, requestLocationAndSort, user]);
 
   async function handleCuisineChange(nextCuisineType: string) {
     setSelectedCuisine(nextCuisineType);
-    if (nextCuisineType.trim().length === 0) {
-      await fetchRestaurants();
-      return;
-    }
-    await fetchRestaurants({ cuisineType: nextCuisineType });
+    await fetchWithFilters(nextCuisineType, userCoordinates);
   }
 
   return (
@@ -111,7 +188,15 @@ export function ExplorePage() {
           maxWidth="lg"
           sx={{ py: { xs: 4, md: 6 }, px: { xs: 2, sm: 3 } }}
         >
-          <Box sx={{ mb: 3, display: 'flex', justifyContent: 'flex-end' }}>
+          <Box
+            sx={{
+              mb: 3,
+              display: 'flex',
+              justifyContent: 'flex-end',
+              gap: 1.5,
+              flexWrap: 'wrap',
+            }}
+          >
             <FormControl size="small" sx={{ minWidth: 220 }}>
               <InputLabel id="explore-cuisine-filter-label">
                 Cuisine
@@ -136,6 +221,15 @@ export function ExplorePage() {
                 ))}
               </Select>
             </FormControl>
+            <Button
+              variant={isLocationDenied ? 'contained' : 'outlined'}
+              size="small"
+              startIcon={<MyLocationIcon />}
+              disabled={isLoading || isLocating}
+              onClick={() => requestLocationAndSort(true)}
+            >
+              {isLocating ? 'Locating...' : 'Find nearest'}
+            </Button>
           </Box>
 
           {isLoading && (
@@ -155,7 +249,10 @@ export function ExplorePage() {
               <Typography color="error" sx={{ mb: 2 }}>
                 {error}
               </Typography>
-              <Button variant="outlined" onClick={() => fetchRestaurants()}>
+              <Button
+                variant="outlined"
+                onClick={() => fetchWithFilters(selectedCuisine, userCoordinates)}
+              >
                 Try again
               </Button>
             </Box>
