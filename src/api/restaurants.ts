@@ -35,6 +35,7 @@ export async function listRestaurants(
   const res = await apiClient.get<Restaurant[]>(ENDPOINTS.RESTAURANTS.LIST, {
     params: params
       ? {
+          ...(params.q != null && params.q.trim().length > 0 && { q: params.q.trim() }),
           ...(params.cuisineType != null && { cuisineType: params.cuisineType }),
             ...(params.sort != null && { sort: params.sort }),
             ...(params.lat != null && { lat: params.lat }),

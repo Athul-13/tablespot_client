@@ -56,6 +56,8 @@ export interface RestaurantRatingResult {
 
 /** Query params for list restaurants (optional). */
 export interface ListRestaurantsParams {
+  /** Case-insensitive substring on restaurant name (server query param `q`). */
+  q?: string;
   cuisineType?: string;
   sort?: 'newest' | 'nearest';
   lat?: number;

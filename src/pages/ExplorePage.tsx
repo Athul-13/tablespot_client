@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Box,
@@ -11,8 +11,14 @@ import {
   InputLabel,
   MenuItem,
   Select,
+  TextField,
+  InputAdornment,
 } from '@mui/material';
-import { Add as AddIcon, MyLocation as MyLocationIcon } from '@mui/icons-material';
+import {
+  Add as AddIcon,
+  MyLocation as MyLocationIcon,
+  Search as SearchIcon,
+} from '@mui/icons-material';
 import { MainLayout } from '@/components/layout';
 import { useRestaurants } from '@/contexts/RestaurantContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -20,6 +26,10 @@ import { useToast } from '@/contexts/ToastContext';
 import RestaurantCard from '@/components/restaurants/RestaurantCard';
 import exploreHeroImage from '@/assets/explore-hero.jpg';
 import { CUISINE_TYPES } from '@/constants/cuisineTypes';
+import type { ListRestaurantsParams } from '@/types/restaurant';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
+
+const SEARCH_DEBOUNCE_MS = 350;
 
 interface UserCoordinates {
   lat: number;
@@ -31,19 +41,23 @@ export function ExplorePage() {
   const { toast } = useToast();
   const { restaurants, isLoading, error, fetchRestaurants } = useRestaurants();
   const [selectedCuisine, setSelectedCuisine] = useState<string>('');
+  const [searchInput, setSearchInput] = useState('');
+  const debouncedSearch = useDebouncedValue(searchInput, SEARCH_DEBOUNCE_MS);
   const [userCoordinates, setUserCoordinates] = useState<UserCoordinates | null>(null);
   const [isLocating, setIsLocating] = useState(false);
   const [isLocationDenied, setIsLocationDenied] = useState(false);
 
   const fetchWithFilters = useCallback(
-    async (cuisineType: string, coordinates?: UserCoordinates | null) => {
-      const params: {
-        cuisineType?: string;
-        sort?: 'nearest';
-        lat?: number;
-        lng?: number;
-      } = {};
-      if (cuisineType.trim().length > 0) params.cuisineType = cuisineType.trim();
+    async (
+      cuisineType: string,
+      coordinates?: UserCoordinates | null,
+      searchQuery = ''
+    ) => {
+      const params: ListRestaurantsParams = {};
+      const c = cuisineType.trim();
+      if (c.length > 0) params.cuisineType = c;
+      const q = searchQuery.trim();
+      if (q.length > 0) params.q = q.slice(0, 200);
       if (coordinates) {
         params.sort = 'nearest';
         params.lat = coordinates.lat;
@@ -66,14 +80,13 @@ export function ExplorePage() {
         }
         setIsLocating(true);
         navigator.geolocation.getCurrentPosition(
-          async (position) => {
+          (position) => {
             const nextCoordinates = {
               lat: position.coords.latitude,
               lng: position.coords.longitude,
             };
             setUserCoordinates(nextCoordinates);
             setIsLocationDenied(false);
-            await fetchWithFilters(selectedCuisine, nextCoordinates);
             setIsLocating(false);
             resolve();
           },
@@ -94,13 +107,22 @@ export function ExplorePage() {
           }
         );
       }),
-    [fetchWithFilters, selectedCuisine, toast]
+    [toast]
   );
+
+  const skipFilterSyncOnce = useRef(true);
+  useEffect(() => {
+    if (skipFilterSyncOnce.current) {
+      skipFilterSyncOnce.current = false;
+      return;
+    }
+    void fetchWithFilters(selectedCuisine, userCoordinates, debouncedSearch);
+  }, [debouncedSearch, selectedCuisine, userCoordinates, fetchWithFilters]);
 
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
-      await fetchWithFilters('', null);
+      await fetchWithFilters('', null, '');
       if (cancelled || !user) return;
       await requestLocationAndSort(false);
     };
@@ -110,10 +132,11 @@ export function ExplorePage() {
     };
   }, [fetchWithFilters, requestLocationAndSort, user]);
 
-  async function handleCuisineChange(nextCuisineType: string) {
+  function handleCuisineChange(nextCuisineType: string) {
     setSelectedCuisine(nextCuisineType);
-    await fetchWithFilters(nextCuisineType, userCoordinates);
   }
+
+  const hasSearchQuery = debouncedSearch.trim().length > 0;
 
   return (
     <MainLayout>
@@ -193,10 +216,31 @@ export function ExplorePage() {
               mb: 3,
               display: 'flex',
               justifyContent: 'flex-end',
+              alignItems: { xs: 'stretch', sm: 'center' },
               gap: 1.5,
               flexWrap: 'wrap',
+              flexDirection: { xs: 'column', sm: 'row' },
             }}
           >
+            <TextField
+              size="small"
+              placeholder="Search by name"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              inputProps={{ 'aria-label': 'Search restaurants by name' }}
+              sx={{
+                flex: { sm: '1 1 240px' },
+                minWidth: { sm: 200 },
+                maxWidth: { sm: 420 },
+              }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon fontSize="small" aria-hidden />
+                  </InputAdornment>
+                ),
+              }}
+            />
             <FormControl size="small" sx={{ minWidth: 220 }}>
               <InputLabel id="explore-cuisine-filter-label">
                 Cuisine
@@ -251,7 +295,13 @@ export function ExplorePage() {
               </Typography>
               <Button
                 variant="outlined"
-                onClick={() => fetchWithFilters(selectedCuisine, userCoordinates)}
+                onClick={() =>
+                  fetchWithFilters(
+                    selectedCuisine,
+                    userCoordinates,
+                    debouncedSearch
+                  )
+                }
               >
                 Try again
               </Button>
@@ -270,7 +320,9 @@ export function ExplorePage() {
               }}
             >
               <Typography color="text.secondary">
-                No restaurants yet. Be the first to add one.
+                {hasSearchQuery
+                  ? 'No restaurants match your search. Try a different name or clear the search.'
+                  : 'No restaurants yet. Be the first to add one.'}
               </Typography>
               {user && (
                 <Button
